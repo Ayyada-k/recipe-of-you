@@ -733,7 +733,9 @@
 </div>
 
 <script>
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwV68O8NcyR0P6FGQMdukwY0Y3xnxGFAdooYAL813iKhcDU8ZkMq_mZO-cCER1YdPBfAA/exec';
+const BIN_ID  = '699753f343b1c97be98c2ce6';
+const API_KEY = '$2a$10$YTFaxn.Kl804fs5YP3CygOZst/tvqD2ptqdGU56qgtE9D6dVC1N5a';
+const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
 // Cache fetched entries so word clouds don't re-fetch on every modal open
 let cachedEntries = [];
@@ -797,7 +799,7 @@ function wordFrequency(field) {
   return Object.entries(freq).sort((a, b) => b[1] - a[1]);
 }
 
-// ── SUBMIT ────────────────────────────────────────────────────
+// ── SUBMIT → read current bin, append, write back ─────────────
 async function submitRecipe() {
   const name        = document.getElementById('name-input').value.trim();
   const ingredients = document.getElementById('ingredients').value.trim();
@@ -815,15 +817,42 @@ async function submitRecipe() {
   btn.textContent = '⏳ Adding to pot…';
   btn.disabled = true;
 
-  // Optimistically show immediately
-  cachedEntries.push({ name, ingredients, seasoning, garnish, instruction });
-
   try {
-    const params = new URLSearchParams({ action: 'submit', name, ingredients, seasoning, garnish, instruction });
-    await fetch(SHEETS_URL + '?' + params.toString(), { mode: 'no-cors' });
+    // 1. Read latest data from JSONBin
+    const getRes = await fetch(BIN_URL + '/latest', {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': API_KEY,
+        'X-Bin-Meta': 'false'
+      }
+    });
+    if (!getRes.ok) throw new Error('HTTP ' + getRes.status);
+    const getData = await getRes.json();
+    const current = Array.isArray(getData) ? getData : (Array.isArray(getData.record) ? getData.record : []);
+
+    // Filter out the init placeholder if present
+    const clean = current.filter(e => !e.init);
+
+    // 2. Add new entry
+    const newEntry = { name, ingredients, seasoning, garnish, instruction, ts: Date.now() };
+    clean.push(newEntry);
+
+    // 3. Write back to JSONBin
+    await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(clean)
+    });
+
+    cachedEntries = clean;
+
   } catch (err) {
     console.warn('Submit error:', err.message);
-    // Entry already added to cache optimistically, so continue
+    // Optimistically add anyway so user sees something
+    cachedEntries.push({ name, ingredients, seasoning, garnish, instruction });
   }
 
   ['name-input','ingredients','seasoning','garnish','instruction'].forEach(id => {
@@ -836,22 +865,26 @@ async function submitRecipe() {
 
   showPage('clouds-page');
   renderClouds();
-
-  // Wait a moment then pull fresh data from sheet
-  setTimeout(fetchAndRender, 2000);
 }
 
-// ── FETCH from Google Sheets ─────────────────────────────────
+// ── FETCH from JSONBin ────────────────────────────────────────
 async function fetchAndRender() {
   try {
-    const res = await fetch(SHEETS_URL + '?t=' + Date.now());
+    const res = await fetch(BIN_URL + '/latest', {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': API_KEY,
+        'X-Bin-Meta': 'false'
+      }
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    if (Array.isArray(data)) cachedEntries = data;
+    const records = Array.isArray(data) ? data : (Array.isArray(data.record) ? data.record : []);
+    cachedEntries = records.filter(e => !e.init);
     renderClouds();
   } catch (err) {
-    console.warn('Could not fetch from Google Sheets:', err.message);
-    renderClouds(); // show whatever is cached
+    console.warn('Could not fetch from JSONBin:', err.message);
+    renderClouds();
   }
 }
 
