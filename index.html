@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe of You 🍲</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:ital@0;1&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FFF8EE;
+    --warm: #F5E6C8;
+    --terracotta: #C8614A;
+    --sage: #7B9E87;
+    --gold: #D4A853;
+    --brown: #6B4226;
+    --blush: #E8A598;
+    --mint: #A8C5B5;
+    --sky: #B8D4E8;
+    --lavender: #C5B8E8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background-color: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(200,97,74,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(123,158,135,0.08) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8614A' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    animation: fadeIn 0.4s ease;
+  }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* HERO PAGE */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .pot-icon {
+    font-size: 80px;
+    margin-bottom: 16px;
+    display: block;
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  #hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    color: var(--brown);
+    line-height: 1.1;
+  }
+
+  #hero h1 em {
+    color: var(--terracotta);
+    font-style: italic;
+  }
+
+  #hero p {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    color: #8B6348;
+    margin: 16px 0 32px;
+    max-width: 500px;
+  }
+
+  .btn {
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 15px rgba(200,97,74,0.3);
+    letter-spacing: 0.5px;
+  }
+
+  .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(200,97,74,0.4);
+  }
+
+  .btn.secondary {
+    background: white;
+    color: var(--terracotta);
+    border: 2px solid var(--terracotta);
+    box-shadow: none;
+  }
+
+  .btn.secondary:hover {
+    background: var(--terracotta);
+    color: white;
+  }
+
+  /* RECIPE FORM */
+  #form-page {
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .recipe-card {
+    max-width: 700px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(107,66,38,0.12);
+    border: 1px solid rgba(212,168,83,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .recipe-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--terracotta), var(--gold), var(--sage));
+  }
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .card-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--brown);
+  }
+
+  .card-header p {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #9B7B5A;
+    margin-top: 6px;
+  }
+
+  .dotted-line {
+    border: none;
+    border-top: 2px dashed var(--warm);
+    margin: 28px 0;
+  }
+
+  .field-group {
+    margin-bottom: 28px;
+  }
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .field-emoji { font-size: 1.5rem; }
+
+  .field-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brown);
+  }
+
+  .field-subtitle {
+    font-size: 0.8rem;
+    color: #A08060;
+    font-style: italic;
+    margin-left: auto;
+  }
+
+  textarea {
+    width: 100%;
+    border: 2px solid var(--warm);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    color: var(--brown);
+    resize: vertical;
+    min-height: 90px;
+    transition: border-color 0.2s;
+    background: var(--cream);
+    outline: none;
+  }
+
+  textarea:focus { border-color: var(--gold); background: white; }
+  textarea::placeholder { color: #C4A882; font-style: italic; }
+
+  .ingredient-colors {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .color-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .card-actions .btn { flex: 1; }
+
+  /* CLOUDS PAGE */
+  #clouds-page {
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .clouds-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .clouds-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--brown);
+  }
+
+  .clouds-header p {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #9B7B5A;
+    margin-top: 8px;
+  }
+
+  .bowls-grid {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 32px;
+  }
+
+  .bowl-card {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(107,66,38,0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bowl-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(107,66,38,0.15);
+  }
+
+  .bowl-card .stripe {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .bowl-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--brown);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bowl-card p {
+    font-size: 0.85rem;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #B09070;
+    margin-bottom: 12px;
+  }
+
+  .bowl-svg-wrapper {
+    text-align: center;
+  }
+
+  .soup-bowl {
+    width: 200px;
+    height: 130px;
+    margin: 0 auto;
+    display: block;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.1));
+  }
+
+  .word-cloud-container {
+    min-height: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 4px 12px;
+  }
+
+  .empty-cloud-hint {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: #C4A882;
+    text-align: center;
+    padding: 8px 0 12px;
+  }
+
+  .word-tag {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    border-radius: 20px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    animation: popIn 0.4s ease backwards;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.3); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .count-badge {
+    display: inline-block;
+    background: var(--warm);
+    color: var(--brown);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .back-nav {
+    text-align: center;
+    margin-top: 40px;
+    padding-bottom: 40px;
+  }
+
+  /* STEAM ANIMATION */
+  .steam {
+    position: absolute;
+    top: -20px;
+    width: 6px;
+    height: 30px;
+    border-radius: 10px;
+    opacity: 0;
+    animation: steam 2s infinite ease-in-out;
+  }
+
+  @keyframes steam {
+    0% { opacity: 0; transform: translateY(0) scaleX(1); }
+    30% { opacity: 0.6; }
+    70% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-40px) scaleX(1.5); }
+  }
+
+  /* Entry count display */
+  .entry-count {
+    text-align: center;
+    margin-bottom: 24px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #9B7B5A;
+    font-size: 0.95rem;
+  }
+
+  .entry-count strong {
+    color: var(--terracotta);
+    font-style: normal;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* Name field */
+  .name-field input {
+    width: 100%;
+    border: 2px solid var(--warm);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    color: var(--brown);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .name-field input:focus { border-color: var(--gold); background: white; }
+  .name-field input::placeholder { color: #C4A882; font-style: italic; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(107,66,38,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 550px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--brown);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal .subtitle {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #9B7B5A;
+    margin-bottom: 24px;
+  }
+
+  .modal-bowl-wrapper {
+    text-align: center;
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .modal-word-cloud {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 135px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 14px;
+    overflow: hidden;
+  }
+
+  .modal .soup-bowl { width: 300px; height: 200px; }
+
+  .close-modal {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--warm);
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--brown);
+    font-weight: 800;
+  }
+
+  .all-words-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* Footer deco */
+  .spoon-deco {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 12px;
+    opacity: 0.4;
+  }
+
+  @media (max-width: 600px) {
+    .recipe-card { padding: 32px 20px; }
+    .bowls-grid { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO PAGE -->
+<div id="hero" class="page active">
+  <span class="pot-icon">🍲</span>
+  <h1>The <em>Recipe</em><br>of You</h1>
+  <p>Everyone has a unique recipe — a blend of passions, talents, and purpose. Let's cook yours up together.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn" onclick="showPage('form-page')">✍️ Add My Recipe</button>
+    <button class="btn secondary" onclick="showPage('clouds-page');fetchAndRender()">🥣 See the Soup</button>
+  </div>
+  <div class="spoon-deco">🥄 ✨ 🫙</div>
+</div>
+
+<!-- FORM PAGE -->
+<div id="form-page" class="page">
+  <div class="recipe-card">
+    <div class="card-header">
+      <h2>🧾 Your Recipe Card</h2>
+      <p>Fill in each ingredient honestly — this soup is all about you.</p>
+    </div>
+
+    <div class="field-group name-field">
+      <div class="field-label">
+        <span class="field-emoji">👤</span>
+        <span class="field-title">Your Name</span>
+        <span class="field-subtitle">optional</span>
+      </div>
+      <input type="text" id="name-input" placeholder="What shall we call this recipe?">
+    </div>
+
+    <hr class="dotted-line">
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="field-emoji">🔥</span>
+        <span class="field-title">Ingredients</span>
+        <span class="field-subtitle">What you Love</span>
+      </div>
+      <textarea id="ingredients" placeholder="e.g. making people laugh, being in nature, solving puzzles, music, storytelling…"></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="field-emoji">✨</span>
+        <span class="field-title">Seasoning</span>
+        <span class="field-subtitle">What you're Good At</span>
+      </div>
+      <textarea id="seasoning" placeholder="e.g. writing, listening deeply, organizing chaos, coding, drawing, mediating…"></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="field-emoji">🌱</span>
+        <span class="field-title">Garnish</span>
+        <span class="field-subtitle">What the World Needs</span>
+      </div>
+      <textarea id="garnish" placeholder="e.g. mental health support, climate solutions, better education, community, creativity…"></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="field-emoji">💰</span>
+        <span class="field-title">Instructions</span>
+        <span class="field-subtitle">What you can be Paid For</span>
+      </div>
+      <textarea id="instruction" placeholder="e.g. therapy, freelance design, teaching, consulting, content creation, coaching…"></textarea>
+    </div>
+
+    <div class="card-actions">
+      <button class="btn secondary" onclick="showPage('hero')">← Back</button>
+      <button class="btn" onclick="submitRecipe()">🍲 Add to the Pot!</button>
+    </div>
+  </div>
+  <div class="spoon-deco" style="margin-top:24px;margin-bottom:40px;">🥄 ✨ 🫙</div>
+</div>
+
+<!-- CLOUDS PAGE -->
+<div id="clouds-page" class="page">
+  <div class="clouds-header">
+    <h2>🍲 The Community Soup</h2>
+    <p id="clouds-subtitle">Tap a bowl to peek inside</p>
+  </div>
+
+  <div id="entry-count" class="entry-count"></div>
+
+  <div class="bowls-grid">
+    <!-- Ingredients bowl -->
+    <div class="bowl-card" onclick="openModal('ingredients')">
+      <div class="stripe" style="background:linear-gradient(90deg,#E8A598,#C8614A)"></div>
+      <h3>🔥 Ingredients <span class="count-badge" id="count-ingredients">0</span></h3>
+      <p>What lights people up — things they love</p>
+      <div class="word-cloud-container" id="preview-ingredients"><span class="empty-cloud-hint">no entries yet…</span></div>
+      <div class="bowl-svg-wrapper">
+        <svg class="soup-bowl" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FDEBD5"/>
+          <path d="M 12 72 Q 20 145 120 150 Q 220 145 228 72 Z" fill="#F5D5B0"/>
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FFE8C8" opacity="0.7"/>
+          <ellipse cx="120" cy="70" rx="95" ry="24" fill="#FFF0DD"/>
+          <ellipse cx="120" cy="68" rx="88" ry="20" fill="#E8A598" opacity="0.4"/>
+          <circle cx="95" cy="66" r="5" fill="#C8614A" opacity="0.25"/>
+          <circle cx="118" cy="63" r="4" fill="#E8A598" opacity="0.3"/>
+          <circle cx="140" cy="67" r="6" fill="#D4793A" opacity="0.2"/>
+          <circle cx="108" cy="70" r="3" fill="#C8614A" opacity="0.2"/>
+        </svg>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:0.75rem;color:#C4A882;font-family:'Lora',serif;font-style:italic;">tap to see all ↗</div>
+    </div>
+
+    <!-- Seasoning bowl -->
+    <div class="bowl-card" onclick="openModal('seasoning')">
+      <div class="stripe" style="background:linear-gradient(90deg,#D4A853,#E8C070)"></div>
+      <h3>✨ Seasoning <span class="count-badge" id="count-seasoning">0</span></h3>
+      <p>Natural talents — what people are good at</p>
+      <div class="word-cloud-container" id="preview-seasoning"><span class="empty-cloud-hint">no entries yet…</span></div>
+      <div class="bowl-svg-wrapper">
+        <svg class="soup-bowl" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FDEBD5"/>
+          <path d="M 12 72 Q 20 145 120 150 Q 220 145 228 72 Z" fill="#F5D5B0"/>
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FFE8C8" opacity="0.7"/>
+          <ellipse cx="120" cy="70" rx="95" ry="24" fill="#FFF0DD"/>
+          <ellipse cx="120" cy="68" rx="88" ry="20" fill="#D4A853" opacity="0.4"/>
+          <circle cx="95" cy="66" r="5" fill="#D4A853" opacity="0.3"/>
+          <circle cx="118" cy="63" r="4" fill="#E8C070" opacity="0.35"/>
+          <circle cx="140" cy="67" r="6" fill="#C89030" opacity="0.2"/>
+          <circle cx="108" cy="70" r="3" fill="#D4A853" opacity="0.25"/>
+        </svg>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:0.75rem;color:#C4A882;font-family:'Lora',serif;font-style:italic;">tap to see all ↗</div>
+    </div>
+
+    <!-- Garnish bowl -->
+    <div class="bowl-card" onclick="openModal('garnish')">
+      <div class="stripe" style="background:linear-gradient(90deg,#7B9E87,#A8C5B5)"></div>
+      <h3>🌱 Garnish <span class="count-badge" id="count-garnish">0</span></h3>
+      <p>Problems to solve — what the world needs</p>
+      <div class="word-cloud-container" id="preview-garnish"><span class="empty-cloud-hint">no entries yet…</span></div>
+      <div class="bowl-svg-wrapper">
+        <svg class="soup-bowl" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FDEBD5"/>
+          <path d="M 12 72 Q 20 145 120 150 Q 220 145 228 72 Z" fill="#F5D5B0"/>
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FFE8C8" opacity="0.7"/>
+          <ellipse cx="120" cy="70" rx="95" ry="24" fill="#FFF0DD"/>
+          <ellipse cx="120" cy="68" rx="88" ry="20" fill="#7B9E87" opacity="0.4"/>
+          <circle cx="95" cy="66" r="5" fill="#7B9E87" opacity="0.3"/>
+          <circle cx="118" cy="63" r="4" fill="#A8C5B5" opacity="0.35"/>
+          <circle cx="140" cy="67" r="6" fill="#5A8060" opacity="0.2"/>
+          <circle cx="108" cy="70" r="3" fill="#7B9E87" opacity="0.25"/>
+        </svg>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:0.75rem;color:#C4A882;font-family:'Lora',serif;font-style:italic;">tap to see all ↗</div>
+    </div>
+
+    <!-- Instructions bowl -->
+    <div class="bowl-card" onclick="openModal('instruction')">
+      <div class="stripe" style="background:linear-gradient(90deg,#B8D4E8,#C5B8E8)"></div>
+      <h3>💰 Instructions <span class="count-badge" id="count-instruction">0</span></h3>
+      <p>Career paths — what they can be paid for</p>
+      <div class="word-cloud-container" id="preview-instruction"><span class="empty-cloud-hint">no entries yet…</span></div>
+      <div class="bowl-svg-wrapper">
+        <svg class="soup-bowl" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FDEBD5"/>
+          <path d="M 12 72 Q 20 145 120 150 Q 220 145 228 72 Z" fill="#F5D5B0"/>
+          <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FFE8C8" opacity="0.7"/>
+          <ellipse cx="120" cy="70" rx="95" ry="24" fill="#FFF0DD"/>
+          <ellipse cx="120" cy="68" rx="88" ry="20" fill="#B8D4E8" opacity="0.5"/>
+          <circle cx="95" cy="66" r="5" fill="#8AB0CC" opacity="0.3"/>
+          <circle cx="118" cy="63" r="4" fill="#C5B8E8" opacity="0.35"/>
+          <circle cx="140" cy="67" r="6" fill="#8080C0" opacity="0.2"/>
+          <circle cx="108" cy="70" r="3" fill="#B8D4E8" opacity="0.25"/>
+        </svg>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:0.75rem;color:#C4A882;font-family:'Lora',serif;font-style:italic;">tap to see all ↗</div>
+    </div>
+  </div>
+
+  <div class="back-nav">
+    <button class="btn secondary" onclick="showPage('hero')" style="margin-right:10px">← Home</button>
+    <button class="btn" onclick="showPage('form-page')">✍️ Add My Recipe</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <button class="close-modal" onclick="closeModal()">✕</button>
+    <h3 id="modal-title"></h3>
+    <p class="subtitle" id="modal-subtitle"></p>
+    <div class="modal-bowl-wrapper">
+      <div class="modal-word-cloud" id="modal-word-cloud"></div>
+      <svg class="soup-bowl" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" id="modal-bowl-svg">
+        <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FDEBD5"/>
+        <path d="M 12 72 Q 20 145 120 150 Q 220 145 228 72 Z" fill="#F5D5B0"/>
+        <ellipse cx="120" cy="72" rx="108" ry="30" fill="#FFE8C8" opacity="0.7"/>
+        <ellipse cx="120" cy="70" rx="95" ry="24" fill="#FFF0DD"/>
+        <ellipse cx="120" cy="68" rx="88" ry="20" opacity="0.4" id="modal-soup-color"/>
+        <circle cx="95" cy="66" r="5" opacity="0.3" id="modal-dot1"/>
+        <circle cx="118" cy="63" r="4" opacity="0.35" id="modal-dot2"/>
+        <circle cx="140" cy="67" r="6" opacity="0.2" id="modal-dot3"/>
+      </svg>
+    </div>
+    <div class="all-words-list" id="all-words-list"></div>
+  </div>
+</div>
+
+<script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwV68O8NcyR0P6FGQMdukwY0Y3xnxGFAdooYAL813iKhcDU8ZkMq_mZO-cCER1YdPBfAA/exec';
+
+// Cache fetched entries so word clouds don't re-fetch on every modal open
+let cachedEntries = [];
+
+const META = {
+  ingredients: {
+    emoji: '🔥',
+    title: 'Ingredients',
+    subtitle: 'What lights people up — things they love',
+    colors: ['#C8614A','#D4793A','#E8A598','#B84030','#E06050'],
+    soupColor: '#E8A598',
+  },
+  seasoning: {
+    emoji: '✨',
+    title: 'Seasoning',
+    subtitle: 'Natural talents — what people are good at',
+    colors: ['#D4A853','#C89030','#E8C070','#A07830','#F0D090'],
+    soupColor: '#D4A853',
+  },
+  garnish: {
+    emoji: '🌱',
+    title: 'Garnish',
+    subtitle: 'Problems to solve — what the world needs',
+    colors: ['#7B9E87','#5A8060','#A8C5B5','#3A7050','#90B8A0'],
+    soupColor: '#7B9E87',
+  },
+  instruction: {
+    emoji: '💰',
+    title: 'Instructions',
+    subtitle: 'Career paths — what they can be paid for',
+    colors: ['#7090C8','#9090D0','#B8D4E8','#5070A0','#C5B8E8'],
+    soupColor: '#B8D4E8',
+  }
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.scrollTop = 0;
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.scrollTop = 0;
+}
+
+function tokenize(text) {
+  return String(text).split(/[,\n;.\/]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 1 && s.length < 40);
+}
+
+function wordFrequency(field) {
+  const freq = {};
+  cachedEntries.forEach(e => {
+    if (!e[field]) return;
+    tokenize(e[field]).forEach(word => {
+      const w = word.toLowerCase();
+      freq[w] = (freq[w] || 0) + 1;
+    });
+  });
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]);
+}
+
+// ── SUBMIT ──────────────────────────────────────────────
+async function submitRecipe() {
+  const name        = document.getElementById('name-input').value.trim();
+  const ingredients = document.getElementById('ingredients').value.trim();
+  const seasoning   = document.getElementById('seasoning').value.trim();
+  const garnish     = document.getElementById('garnish').value.trim();
+  const instruction = document.getElementById('instruction').value.trim();
+
+  if (!ingredients && !seasoning && !garnish && !instruction) {
+    alert('Please fill in at least one ingredient! 🥄');
+    return;
+  }
+
+  // Show loading state on button
+  const btn = document.querySelector('#form-page .btn:not(.secondary)');
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Adding to pot…';
+  btn.disabled = true;
+
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',          // Apps Script requires no-cors
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, ingredients, seasoning, garnish, instruction })
+    });
+
+    // Optimistically add to local cache so user sees their entry immediately
+    cachedEntries.push({ name, ingredients, seasoning, garnish, instruction });
+
+    // Clear form
+    ['name-input','ingredients','seasoning','garnish','instruction'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    showPage('clouds-page');
+    renderClouds();          // render from cache instantly
+    fetchAndRender();        // then refresh from sheet in background
+
+  } catch (err) {
+    alert('Oops, something went wrong saving your recipe. Please try again 🥄');
+    console.error(err);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+// ── FETCH from Google Sheets ─────────────────────────────
+async function fetchAndRender() {
+  try {
+    const res  = await fetch(SHEETS_URL);
+    const data = await res.json();
+    cachedEntries = Array.isArray(data) ? data : [];
+    renderClouds();
+  } catch (err) {
+    console.warn('Could not fetch from Google Sheets:', err);
+    // Keep whatever is already in cachedEntries (optimistic data)
+    renderClouds();
+  }
+}
+
+// ── RENDER CLOUDS PAGE ──────────────────────────────────
+function renderClouds() {
+  const count    = cachedEntries.length;
+  const subtitle = document.getElementById('clouds-subtitle');
+  const countEl  = document.getElementById('entry-count');
+
+  subtitle.textContent = count === 0
+    ? 'No recipes yet — be the first! 🥄'
+    : 'Tap a bowl to see all words';
+  countEl.innerHTML = count > 0
+    ? `<strong>${count}</strong> recipe${count > 1 ? 's' : ''} in the pot so far 🍲`
+    : '';
+
+  ['ingredients','seasoning','garnish','instruction'].forEach(field => {
+    const freq = wordFrequency(field);
+    document.getElementById(`count-${field}`).textContent = freq.length;
+    renderPreviewCloud(field, freq);
+  });
+}
+
+function renderPreviewCloud(field, freq) {
+  const container = document.getElementById(`preview-${field}`);
+  container.innerHTML = '';
+  const colors = META[field].colors;
+
+  if (freq.length === 0) {
+    container.innerHTML = '<span class="empty-cloud-hint">no entries yet…</span>';
+    return;
+  }
+
+  const top      = freq.slice(0, 14);
+  const maxCount = top[0]?.[1] || 1;
+
+  top.forEach(([word, count], i) => {
+    const span = document.createElement('span');
+    span.className = 'word-tag';
+    const size = 10 + Math.round((count / maxCount) * 10);
+    span.style.fontSize        = size + 'px';
+    span.style.background      = colors[i % colors.length] + '20';
+    span.style.color           = colors[i % colors.length];
+    span.style.border          = `1px solid ${colors[i % colors.length]}40`;
+    span.style.animationDelay  = (i * 0.05) + 's';
+    span.textContent = word;
+    container.appendChild(span);
+  });
+}
+
+// ── MODAL ───────────────────────────────────────────────
+function openModal(field) {
+  const freq = wordFrequency(field);
+  const m    = META[field];
+
+  document.getElementById('modal-title').innerHTML    = `${m.emoji} ${m.title}`;
+  document.getElementById('modal-subtitle').textContent = m.subtitle;
+
+  document.getElementById('modal-soup-color').setAttribute('fill', m.soupColor);
+  document.getElementById('modal-dot1').setAttribute('fill', m.colors[0]);
+  document.getElementById('modal-dot2').setAttribute('fill', m.colors[2]);
+  document.getElementById('modal-dot3').setAttribute('fill', m.colors[1]);
+
+  // Modal word cloud (top 18 sized by frequency)
+  const cloud    = document.getElementById('modal-word-cloud');
+  cloud.innerHTML = '';
+  const top      = freq.slice(0, 18);
+  const maxCount = top[0]?.[1] || 1;
+
+  top.forEach(([word, count], i) => {
+    const span = document.createElement('span');
+    span.className = 'word-tag';
+    const size = 9 + Math.round((count / maxCount) * 13);
+    span.style.fontSize       = size + 'px';
+    span.style.background     = m.colors[i % m.colors.length] + '22';
+    span.style.color          = m.colors[i % m.colors.length];
+    span.style.animationDelay = (i * 0.04) + 's';
+    span.textContent = word;
+    cloud.appendChild(span);
+  });
+
+  // Full word list below
+  const list = document.getElementById('all-words-list');
+  list.innerHTML = '';
+  if (freq.length === 0) {
+    list.innerHTML = '<p style="color:#B09070;font-style:italic;font-family:Lora,serif;width:100%">No entries yet — be the first! 🥄</p>';
+  } else {
+    freq.forEach(([word, count], i) => {
+      const span = document.createElement('span');
+      span.className = 'word-tag';
+      span.style.fontSize    = '13px';
+      span.style.background  = m.colors[i % m.colors.length] + '18';
+      span.style.color       = m.colors[i % m.colors.length];
+      span.style.border      = `1px solid ${m.colors[i % m.colors.length]}40`;
+      span.style.animationDelay = (i * 0.02) + 's';
+      span.textContent = count > 1 ? `${word} ×${count}` : word;
+      list.appendChild(span);
+    });
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+// Pre-load data so the soup page is ready instantly when navigated to
+fetchAndRender();
+</script>
+</body>
+</html>
