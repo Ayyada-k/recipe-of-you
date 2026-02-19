@@ -797,7 +797,7 @@ function wordFrequency(field) {
   return Object.entries(freq).sort((a, b) => b[1] - a[1]);
 }
 
-// ── SUBMIT ──────────────────────────────────────────────
+// ── SUBMIT via JSONP (avoids CORS on POST) ──────────────────
 async function submitRecipe() {
   const name        = document.getElementById('name-input').value.trim();
   const ingredients = document.getElementById('ingredients').value.trim();
@@ -810,54 +810,106 @@ async function submitRecipe() {
     return;
   }
 
-  // Show loading state on button
   const btn = document.querySelector('#form-page .btn:not(.secondary)');
   const originalText = btn.textContent;
   btn.textContent = '⏳ Adding to pot…';
   btn.disabled = true;
 
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors',          // Apps Script requires no-cors
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, ingredients, seasoning, garnish, instruction })
-    });
+  // Optimistically add to cache so user sees result immediately
+  cachedEntries.push({ name, ingredients, seasoning, garnish, instruction });
 
-    // Optimistically add to local cache so user sees their entry immediately
-    cachedEntries.push({ name, ingredients, seasoning, garnish, instruction });
+  // Send via JSONP GET (encode data as URL params)
+  const cbName = 'submitCallback_' + Date.now();
+  const params = new URLSearchParams({
+    action: 'submit',
+    name, ingredients, seasoning, garnish, instruction,
+    callback: cbName
+  });
 
-    // Clear form
-    ['name-input','ingredients','seasoning','garnish','instruction'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
+  await new Promise((resolve) => {
+    window[cbName] = function(res) {
+      delete window[cbName];
+      const old = document.getElementById('submit-jsonp');
+      if (old) old.remove();
+      resolve();
+    };
 
-    showPage('clouds-page');
-    renderClouds();          // render from cache instantly
-    fetchAndRender();        // then refresh from sheet in background
+    const script = document.createElement('script');
+    script.id = 'submit-jsonp';
+    script.src = SHEETS_URL + '?' + params.toString();
+    script.onerror = () => {
+      delete window[cbName];
+      const old = document.getElementById('submit-jsonp');
+      if (old) old.remove();
+      resolve(); // still resolve — optimistic entry already added
+    };
+    document.body.appendChild(script);
 
-  } catch (err) {
-    alert('Oops, something went wrong saving your recipe. Please try again 🥄');
-    console.error(err);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
-  }
+    // Fallback timeout in case callback never fires
+    setTimeout(() => {
+      if (window[cbName]) {
+        delete window[cbName];
+        const old = document.getElementById('submit-jsonp');
+        if (old) old.remove();
+        resolve();
+      }
+    }, 5000);
+  });
+
+  // Clear form
+  ['name-input','ingredients','seasoning','garnish','instruction'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  btn.textContent = originalText;
+  btn.disabled = false;
+
+  showPage('clouds-page');
+  renderClouds();
+  fetchAndRender(); // refresh from sheet in background
 }
 
-// ── FETCH from Google Sheets ─────────────────────────────
-async function fetchAndRender() {
-  try {
-    const res  = await fetch(SHEETS_URL);
-    const data = await res.json();
-    cachedEntries = Array.isArray(data) ? data : [];
-    renderClouds();
-  } catch (err) {
-    console.warn('Could not fetch from Google Sheets:', err);
-    // Keep whatever is already in cachedEntries (optimistic data)
-    renderClouds();
-  }
+// ── FETCH from Google Sheets via JSONP (avoids CORS) ────────
+function fetchAndRender() {
+  return new Promise((resolve) => {
+    const old = document.getElementById('jsonp-script');
+    if (old) old.remove();
+
+    const cbName = 'jsonpCallback_' + Date.now();
+    let settled = false;
+
+    function finish(data) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      const old = document.getElementById('jsonp-script');
+      if (old) old.remove();
+      delete window[cbName];
+      if (data !== null) {
+        cachedEntries = Array.isArray(data) ? data : [];
+      }
+      renderClouds();
+      resolve();
+    }
+
+    // Timeout after 8 seconds
+    const timer = setTimeout(() => {
+      console.warn('Google Sheets fetch timed out — showing cached data');
+      finish(null);
+    }, 8000);
+
+    window[cbName] = function(data) { finish(data); };
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-script';
+    script.src = SHEETS_URL + '?callback=' + cbName;
+    script.onerror = () => {
+      console.warn('Could not fetch from Google Sheets');
+      finish(null);
+    };
+    document.body.appendChild(script);
+  });
 }
 
 // ── RENDER CLOUDS PAGE ──────────────────────────────────
