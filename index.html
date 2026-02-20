@@ -663,93 +663,93 @@ function showWhoSaid(field, word, m) {
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-// ─────────────────────────────────────────────
-// AI PAGE
-// ─────────────────────────────────────────────
-function populateGarnishSelect() {
-  const sel = document.getElementById('garnish-select');
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">— pick a garnish to analyse —</option>';
-  allUniqueWords('garnish').forEach(w => {
-    const o = document.createElement('option'); o.value=w; o.textContent=w;
-    if (w===prev) o.selected=true;
-    sel.appendChild(o);
-  });
-}
+// // ─────────────────────────────────────────────
+// // AI PAGE
+// // ─────────────────────────────────────────────
+// function populateGarnishSelect() {
+//   const sel = document.getElementById('garnish-select');
+//   const prev = sel.value;
+//   sel.innerHTML = '<option value="">— pick a garnish to analyse —</option>';
+//   allUniqueWords('garnish').forEach(w => {
+//     const o = document.createElement('option'); o.value=w; o.textContent=w;
+//     if (w===prev) o.selected=true;
+//     sel.appendChild(o);
+//   });
+// }
 
-async function runAI() {
-  const garnish = document.getElementById('garnish-select').value;
-  if (!garnish) { alert('Please pick a garnish first! 🌱'); return; }
+// async function runAI() {
+//   const garnish = document.getElementById('garnish-select').value;
+//   if (!garnish) { alert('Please pick a garnish first! 🌱'); return; }
 
-  const resultEl = document.getElementById('ai-result');
-  resultEl.className = 'ai-result loading';
-  resultEl.innerHTML = '<div class="spinner"></div><span>Claude is thinking…</span>';
+//   const resultEl = document.getElementById('ai-result');
+//   resultEl.className = 'ai-result loading';
+//   resultEl.innerHTML = '<div class="spinner"></div><span>Claude is thinking…</span>';
 
-  const communitySkills = allUniqueWords('seasoning');
+//   const communitySkills = allUniqueWords('seasoning');
 
-  const prompt = `You are an ikigai career coach helping a community understand its collective potential.
+//   const prompt = `You are an ikigai career coach helping a community understand its collective potential.
 
-World problem to solve (Garnish): "${garnish}"
+// World problem to solve (Garnish): "${garnish}"
 
-Community skills currently available (Seasoning — what people say they are good at):
-${communitySkills.length ? communitySkills.map(s=>'• '+s).join('\n') : '(no seasoning entries yet)'}
+// Community skills currently available (Seasoning — what people say they are good at):
+// ${communitySkills.length ? communitySkills.map(s=>'• '+s).join('\n') : '(no seasoning entries yet)'}
 
-Your tasks:
-1. Identify exactly 6 key skills needed to address "${garnish}"
-2. For each skill, decide if it's semantically covered by the community skills above (available: true/false)
-3. If available:true, note which community skill it matches in "matchedWith"
-4. Write a 2–3 sentence inspiring summary about how this garnish could be addressed with the right skills
+// Your tasks:
+// 1. Identify exactly 6 key skills needed to address "${garnish}"
+// 2. For each skill, decide if it's semantically covered by the community skills above (available: true/false)
+// 3. If available:true, note which community skill it matches in "matchedWith"
+// 4. Write a 2–3 sentence inspiring summary about how this garnish could be addressed with the right skills
 
-Reply ONLY with valid JSON (no markdown, no backticks):
-{"summary":"...","skills":[{"skill":"...","available":true,"reason":"why this skill matters for the problem","matchedWith":"the community skill it matches, or empty string"}]}`;
+// Reply ONLY with valid JSON (no markdown, no backticks):
+// {"summary":"...","skills":[{"skill":"...","available":true,"reason":"why this skill matters for the problem","matchedWith":"the community skill it matches, or empty string"}]}`;
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true', 'x-api-key': import.meta.env.ANTHROPIC_API_KEY },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
-    });
-    const data = await res.json();
-    const raw  = (data.content||[]).map(c=>c.text||'').join('');
-    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+//   try {
+//     const res = await fetch('https://api.anthropic.com/v1/messages', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true', 'x-api-key': import.meta.env.ANTHROPIC_API_KEY },
+//       body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+//     });
+//     const data = await res.json();
+//     const raw  = (data.content||[]).map(c=>c.text||'').join('');
+//     const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
 
-    const foundCount = parsed.skills.filter(s=>s.available).length;
+//     const foundCount = parsed.skills.filter(s=>s.available).length;
 
-    resultEl.className = 'ai-result';
-    resultEl.innerHTML = `
-      <div class="ai-result-title">🌱 "${garnish}"</div>
-      <p class="ai-summary">${parsed.summary}</p>
-      <div class="skills-header">Skills needed — <span>${foundCount} of ${parsed.skills.length} already in the community ✅</span></div>
-      <div>
-        ${parsed.skills.map((s,i) => {
-          const who = s.available
-            ? cachedEntries
-                .filter(e => e.seasoning && tokenize(e.seasoning).some(w => w.toLowerCase().includes(s.skill.toLowerCase()) || s.skill.toLowerCase().includes(w.toLowerCase())))
-                .map(e => e.name||'Anonymous')
-                .filter((v,i,a)=>a.indexOf(v)===i)
-            : [];
-          return `<div class="skill-row ${s.available?'have':'need'}" style="animation-delay:${i*0.07}s">
-            <span class="skill-icon">${s.available?'✅':'❌'}</span>
-            <div>
-              <span class="skill-name">${s.skill}</span>
-              <span class="skill-why">${s.reason}</span>
-              ${s.available && s.matchedWith ? `<span class="skill-who">↳ Matches community skill: "${s.matchedWith}"</span>` : ''}
-              ${who.length ? `<span class="skill-who" style="color:var(--terracotta)">↳ In the pot: ${who.join(', ')}</span>` : ''}
-              ${!s.available ? `<span class="skill-who" style="color:#B84030">↳ This skill is missing — worth recruiting for!</span>` : ''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      ${communitySkills.length ? `
-      <div class="community-box">
-        <div class="community-box-title">All community skills in the pot</div>
-        <div class="pill-cloud">${communitySkills.map(s=>`<span class="community-pill">${s}</span>`).join('')}</div>
-      </div>` : ''}`;
-  } catch(err) {
-    resultEl.className = 'ai-result';
-    resultEl.innerHTML = `<p style="color:#B84030;font-family:'Lora',serif;font-size:0.93rem">Something went wrong: ${err.message}</p>`;
-  }
-}
+//     resultEl.className = 'ai-result';
+//     resultEl.innerHTML = `
+//       <div class="ai-result-title">🌱 "${garnish}"</div>
+//       <p class="ai-summary">${parsed.summary}</p>
+//       <div class="skills-header">Skills needed — <span>${foundCount} of ${parsed.skills.length} already in the community ✅</span></div>
+//       <div>
+//         ${parsed.skills.map((s,i) => {
+//           const who = s.available
+//             ? cachedEntries
+//                 .filter(e => e.seasoning && tokenize(e.seasoning).some(w => w.toLowerCase().includes(s.skill.toLowerCase()) || s.skill.toLowerCase().includes(w.toLowerCase())))
+//                 .map(e => e.name||'Anonymous')
+//                 .filter((v,i,a)=>a.indexOf(v)===i)
+//             : [];
+//           return `<div class="skill-row ${s.available?'have':'need'}" style="animation-delay:${i*0.07}s">
+//             <span class="skill-icon">${s.available?'✅':'❌'}</span>
+//             <div>
+//               <span class="skill-name">${s.skill}</span>
+//               <span class="skill-why">${s.reason}</span>
+//               ${s.available && s.matchedWith ? `<span class="skill-who">↳ Matches community skill: "${s.matchedWith}"</span>` : ''}
+//               ${who.length ? `<span class="skill-who" style="color:var(--terracotta)">↳ In the pot: ${who.join(', ')}</span>` : ''}
+//               ${!s.available ? `<span class="skill-who" style="color:#B84030">↳ This skill is missing — worth recruiting for!</span>` : ''}
+//             </div>
+//           </div>`;
+//         }).join('')}
+//       </div>
+//       ${communitySkills.length ? `
+//       <div class="community-box">
+//         <div class="community-box-title">All community skills in the pot</div>
+//         <div class="pill-cloud">${communitySkills.map(s=>`<span class="community-pill">${s}</span>`).join('')}</div>
+//       </div>` : ''}`;
+//   } catch(err) {
+//     resultEl.className = 'ai-result';
+//     resultEl.innerHTML = `<p style="color:#B84030;font-family:'Lora',serif;font-size:0.93rem">Something went wrong: ${err.message}</p>`;
+//   }
+// }
 
 // ─────────────────────────────────────────────
 // MODALS
