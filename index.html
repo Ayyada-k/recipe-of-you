@@ -337,6 +337,18 @@
       <p>Pick a world problem from our community's garnish. Claude AI will suggest exactly which skills (seasoning) are needed — then reveal how many we already have in the pot!</p>
     </div>
     <div class="ai-control-panel">
+      <label>🔑 Your Anthropic API Key</label>
+      <div style="position:relative">
+        <input type="password" id="api-key-input" class="ai-select" placeholder="sk-ant-api03-…  (stays in your browser only)"
+          oninput="saveKey(this.value)" style="padding-right:80px">
+        <button onclick="toggleKeyVisibility()" id="key-toggle-btn"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--warm);border:none;border-radius:8px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;color:var(--brown)">Show</button>
+      </div>
+      <p style="font-size:0.72rem;font-family:'Lora',serif;font-style:italic;color:#B09070;margin-top:6px">
+        Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--sage)">console.anthropic.com</a>. Stored only in this browser tab, never shared.
+      </p>
+    </div>
+    <div class="ai-control-panel">
       <label>Choose a Garnish (World Problem to Solve)</label>
       <select class="ai-select" id="garnish-select">
         <option value="">— pick a garnish to analyse —</option>
@@ -468,6 +480,26 @@ function fmtDate(ts) {
 // ─────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// API KEY HELPERS
+// ─────────────────────────────────────────────
+let userApiKey = sessionStorage.getItem('anthropic_key') || '';
+function saveKey(val) {
+  userApiKey = val.trim();
+  sessionStorage.setItem('anthropic_key', userApiKey);
+}
+function toggleKeyVisibility() {
+  const inp = document.getElementById('api-key-input');
+  const btn = document.getElementById('key-toggle-btn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
+  else { inp.type = 'password'; btn.textContent = 'Show'; }
+}
+// Restore key on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('api-key-input');
+  if (inp && userApiKey) inp.value = userApiKey;
+});
+
 async function fetchData() {
   try {
     const res = await fetch(BIN_URL + '/latest', {
@@ -704,9 +736,19 @@ Reply ONLY with valid JSON (no markdown, no backticks):
 {"summary":"...","skills":[{"skill":"...","available":true,"reason":"why this skill matters for the problem","matchedWith":"the community skill it matches, or empty string"}]}`;
 
   try {
+    if (!userApiKey) {
+      resultEl.className = 'ai-result';
+      resultEl.innerHTML = '<p style="color:#B84030;font-family:\'Lora\',serif">Please enter your Anthropic API key above first 🔑</p>';
+      return;
+    }
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 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,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
     });
     const data = await res.json();
